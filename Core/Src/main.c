@@ -18,7 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include <string.h>
+#include <stdio.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -83,7 +84,15 @@ static void MX_USB_OTG_FS_USB_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+/* ------------------------------------------------------------------ */
+/* printf 리타게팅: printf 출력이 USART1로 나가도록 함 (선택)            */
+/* GCC(newlib) 기준. IAR/Keil은 fputc 형태로 바꿔야 함.                 */
+/* ------------------------------------------------------------------ */
+int __io_putchar(int ch)
+{
+    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+    return ch;
+}
 /* USER CODE END 0 */
 
 /**
@@ -131,7 +140,12 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_USB_Init();
   /* USER CODE BEGIN 2 */
+  /* 방법 A: 문자열을 직접 전송 */
+  char *banner = "\r\n=== B-L4S5I-IOT01A UART Demo Start ===\r\n";
+  HAL_UART_Transmit(&huart1, (uint8_t *)banner, strlen(banner), HAL_MAX_DELAY);
 
+  uint32_t count = 0;
+  char msg[64];
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -139,7 +153,16 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+      /* 방법 B: sprintf로 만든 메시지를 전송 */
+      int len = snprintf(msg, sizeof(msg),
+                         "Hello B-L4S5I! count = %lu\r\n",
+                         (unsigned long)count++);
+      HAL_UART_Transmit(&huart1, (uint8_t *)msg, len, HAL_MAX_DELAY);
 
+      /* 방법 C: printf 리타게팅을 쓴다면 아래처럼도 가능 */
+      /* printf("printf works too: %lu\r\n", count); */
+
+      HAL_Delay(1000);   /* 1초 간격 */
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
